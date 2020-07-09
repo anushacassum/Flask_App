@@ -1,3 +1,5 @@
+#include "Python.h"
+
 from flask import Flask, jsonify, request, Response
 from BookModel import *
 from settings import *
@@ -5,11 +7,13 @@ from UserModel import User
 
 import json
 import jwt, datetime
+import redis
 
 from functools import wraps
 
 
 app.config['SECRET_KEY'] = 'meow'
+redis_sessions = redis.Redis(host='localhost', port=6379, db=0)
 
 @app.route('/login', methods=['POST'])
 def get_token():
@@ -19,10 +23,13 @@ def get_token():
 	match = User.username_password_match(username, password)
 	if match:
 		expiration_date = datetime.datetime.utcnow() + datetime.timedelta(seconds=100) 
+		#token = jwt.encode({'exp': expiration_date}, app.config['SECRET_KEY'], algorithm='HS256')
 		token = jwt.encode({'exp': expiration_date}, app.config['SECRET_KEY'], algorithm='HS256')
+		redis_sessions.set(token, 'valid')
 		return token
 	else:
 		return Response('', 401, mimetype='application/json')
+
 
 def token_required(f):
 	@wraps(f)
@@ -51,7 +58,6 @@ def validBookObject(bookObject):
 @app.route('/books', methods=['POST'])
 @token_required
 def add_book():
-
 	request_data = request.get_json()
 
 	if (validBookObject(request_data)):
@@ -115,5 +121,18 @@ def delete_book(isbn):
 		}
 		response = Response(json.dumps(invalidBookObjectErrorMsg, status=404, mimetype=application/json))
 		return response
+
+
+@token_required
+@app.route('/logout')
+def remove_token():
+	token = request.args.get('token')
+	if redis_sessions.get(token):
+		redis_sessions.delete(token)
+		response = Response("", status=204)
+		return response
+	else:
+		return 'False'
+
 
 app.run(port=5000)
