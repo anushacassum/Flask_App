@@ -1,0 +1,8 @@
+# compiled python files
+*.py[co]
+*.pyc
+.idea
+*.db
+*.rdb
+flaskpythonapp
+venv
