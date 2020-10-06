@@ -20,7 +20,7 @@ cupshelpers==1.0
 defer==1.0.6
 docutils==0.14
 environs==8.0.0
-Flask==0.12.2
+Flask==1.0
 Flask-BabelEx==0.9.3
 Flask-Compress==1.4.0
 flask-dynamo==0.1.2
