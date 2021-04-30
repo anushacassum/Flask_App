@@ -82,7 +82,7 @@ requests==2.18.4
 requests-ntlm==1.1.0
 requests-unixsocket==0.1.5
 roman==2.0.0
-rsa==3.4.2
+rsa==4.7
 s3transfer==0.3.3
 sessioninstaller==0.0.0
 setproctitle==1.1.10
