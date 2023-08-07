@@ -1,19 +1,31 @@
 #include "Python.h"
-
+import sentry_sdk
+import flask
 from flask import Flask, jsonify, request, Response
+from sentry_sdk.integrations.flask import FlaskIntegration
 from BookModel import *
 from settings import *
 from UserModel import User
 
 import json
 import jwt, datetime
-import redis
+#import redis
 
 from functools import wraps
 
 
+sentry_sdk.init(
+	dsn="https://17d519949fae4402954e1e3e3b33341f@o471554.ingest.sentry.io/5504157",
+    integrations=[FlaskIntegration()],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0
+)
+
 app.config['SECRET_KEY'] = 'meow'
-redis_sessions = redis.Redis(host='localhost', port=6379, db=0)
+#redis_sessions = redis.Redis(host='localhost', port=6379, db=0)
 
 @app.route('/login', methods=['POST'])
 def get_token():
@@ -25,7 +37,7 @@ def get_token():
 		expiration_date = datetime.datetime.utcnow() + datetime.timedelta(seconds=100) 
 		#token = jwt.encode({'exp': expiration_date}, app.config['SECRET_KEY'], algorithm='HS256')
 		token = jwt.encode({'exp': expiration_date}, app.config['SECRET_KEY'], algorithm='HS256')
-		redis_sessions.set(token, 'valid')
+		#redis_sessions.set(token, 'valid')
 		return token
 	else:
 		return Response('', 401, mimetype='application/json')
@@ -42,11 +54,15 @@ def token_required(f):
 			return jsonify({'error': 'Need a valid token to view this page'})
 	return wrapper
 
+@app.route('/debug-sentry')
+def trigger_error():
+    division_by_zero = 1 / 0
 
 #GET /books
 @app.route('/books')
 def get_books():
-	return jsonify({'books': Book.get_all_books()})
+	return Response("Hey Anusha", 201, mimetype='application/json')
+	# return jsonify({'books': Book.get_all_books()})
 
 def validBookObject(bookObject):
 	if ("name" in bookObject and "price" in bookObject and "isbn" in bookObject):
@@ -127,12 +143,12 @@ def delete_book(isbn):
 @app.route('/logout')
 def remove_token():
 	token = request.args.get('token')
-	if redis_sessions.get(token):
-		redis_sessions.delete(token)
-		response = Response("", status=204)
-		return response
-	else:
-		return 'False'
+	return True
+	# 	redis_sessions.delete(token)
+	# 	response = Response("", status=204)
+	# 	return response
+	# else:
+	# 	return 'False'
 
 
 app.run(port=5000)
